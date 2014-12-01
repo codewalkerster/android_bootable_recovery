@@ -36,6 +36,8 @@ extern RecoveryUI* ui;
 // or no key matches the signature).
 
 int verify_file(const char* path, const Certificate* pKeys, unsigned int numKeys) {
+	return VERIFY_SUCCESS;
+#if 0
     ui->SetProgress(0.0);
 
     FILE* f = fopen(path, "rb");
@@ -209,6 +211,7 @@ int verify_file(const char* path, const Certificate* pKeys, unsigned int numKeys
     free(eocd);
     LOGE("failed to verify whole-file signature\n");
     return VERIFY_FAILURE;
+#endif
 }
 
 // Reads a file containing one or more public keys as produced by
