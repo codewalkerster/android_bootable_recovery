@@ -22,6 +22,7 @@
 
 #include <errno.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <sys/stat.h>
 #include <unistd.h>
@@ -30,6 +31,8 @@ static int get_bootloader_message_mtd(struct bootloader_message *out, const Volu
 static int set_bootloader_message_mtd(const struct bootloader_message *in, const Volume* v);
 static int get_bootloader_message_block(struct bootloader_message *out, const Volume* v);
 static int set_bootloader_message_block(const struct bootloader_message *in, const Volume* v);
+static int get_bootloader_message_raw(struct bootloader_message *out, const Volume* v);
+static int set_bootloader_message_raw(const struct bootloader_message *in, const Volume* v);
 
 int get_bootloader_message(struct bootloader_message *out) {
     Volume* v = volume_for_path("/misc");
@@ -41,6 +44,8 @@ int get_bootloader_message(struct bootloader_message *out) {
         return get_bootloader_message_mtd(out, v);
     } else if (strcmp(v->fs_type, "emmc") == 0) {
         return get_bootloader_message_block(out, v);
+    } else if (strcmp(v->fs_type, "raw") == 0) {
+        return get_bootloader_message_raw(out, v);
     }
     LOGE("unknown misc partition fs_type \"%s\"\n", v->fs_type);
     return -1;
@@ -56,6 +61,8 @@ int set_bootloader_message(const struct bootloader_message *in) {
         return set_bootloader_message_mtd(in, v);
     } else if (strcmp(v->fs_type, "emmc") == 0) {
         return set_bootloader_message_block(in, v);
+    } else if (strcmp(v->fs_type, "raw") == 0) {
+        return set_bootloader_message_raw(in, v);
     }
     LOGE("unknown misc partition fs_type \"%s\"\n", v->fs_type);
     return -1;
@@ -160,8 +167,8 @@ static void wait_for_device(const char* fn) {
     }
 }
 
-static int get_bootloader_message_block(struct bootloader_message *out,
-                                        const Volume* v) {
+static int get_bootloader_message_emmc(struct bootloader_message *out,
+                                        const Volume* v, long offset) {
     wait_for_device(v->blk_device);
     FILE* f = fopen(v->blk_device, "rb");
     if (f == NULL) {
@@ -169,6 +176,8 @@ static int get_bootloader_message_block(struct bootloader_message *out,
         return -1;
     }
     struct bootloader_message temp;
+
+    fseek(f, offset, SEEK_SET);
     int count = fread(&temp, sizeof(temp), 1, f);
     if (count != 1) {
         LOGE("Failed reading %s\n(%s)\n", v->blk_device, strerror(errno));
@@ -182,14 +191,16 @@ static int get_bootloader_message_block(struct bootloader_message *out,
     return 0;
 }
 
-static int set_bootloader_message_block(const struct bootloader_message *in,
-                                        const Volume* v) {
+static int set_bootloader_message_emmc(const struct bootloader_message *in,
+                                        const Volume* v, long offset) {
     wait_for_device(v->blk_device);
     FILE* f = fopen(v->blk_device, "wb");
     if (f == NULL) {
         LOGE("Can't open %s\n(%s)\n", v->blk_device, strerror(errno));
         return -1;
     }
+
+    fseek(f, offset, SEEK_SET);
     int count = fwrite(in, sizeof(*in), 1, f);
     if (count != 1) {
         LOGE("Failed writing %s\n(%s)\n", v->blk_device, strerror(errno));
@@ -200,4 +211,32 @@ static int set_bootloader_message_block(const struct bootloader_message *in,
         return -1;
     }
     return 0;
+}
+
+static int get_bootloader_message_block(struct bootloader_message *out,
+                                        const Volume* v) {
+        return get_bootloader_message_emmc(out, v, 0);
+}
+
+static int set_bootloader_message_block(const struct bootloader_message *in,
+                                        const Volume* v) {
+        return set_bootloader_message_emmc(in, v, 0);
+}
+
+static const char* opt_offset = "offset=";
+
+static int get_bootloader_message_raw(struct bootloader_message *out,
+                                        const Volume* v) {
+        if (strncmp(v->fs_options, opt_offset, strlen(opt_offset)))
+                return 0;
+        int offset = atoi(v->fs_options + strlen(opt_offset));
+        return get_bootloader_message_emmc(out, v, offset * 512);
+}
+
+static int set_bootloader_message_raw(const struct bootloader_message *in,
+                                        const Volume* v) {
+        if (strncmp(v->fs_options, opt_offset, strlen(opt_offset)))
+                return 0;
+        int offset = atoi(v->fs_options + strlen(opt_offset));
+        return set_bootloader_message_emmc(in, v, offset * 512);
 }
