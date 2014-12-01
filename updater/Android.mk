@@ -17,7 +17,8 @@ LOCAL_PATH := $(call my-dir)
 updater_src_files := \
 	install.cpp \
 	blockimg.cpp \
-	updater.cpp
+	updater.cpp \
+	sparse.cpp
 
 #
 # Build a statically-linked binary to include in OTA packages
