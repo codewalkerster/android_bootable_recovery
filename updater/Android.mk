@@ -5,7 +5,8 @@ LOCAL_PATH := $(call my-dir)
 updater_src_files := \
 	install.c \
 	blockimg.c \
-	updater.c
+	updater.c \
+	sparse.c
 
 #
 # Build a statically-linked binary to include in OTA packages
