@@ -1208,6 +1208,46 @@ ui_print(const char* format, ...) {
     }
 }
 
+#define SZ_BLOCK        (4 * 1024 * 1024)
+
+static char* copy_rawimage_to_tmp(const char *rawimage_path, unsigned long fsize)
+{
+        const char *modified_path = "/tmp/update.zip";
+
+        int fs = open(rawimage_path, O_RDONLY);
+        if (fs < 0) {
+                printf("Not able to open %s (%s)\n", rawimage_path,
+                                strerror(errno));
+                return NULL;
+        }
+
+        int fd = open(modified_path, O_CREAT | O_WRONLY, 0644);
+        if (fd < 0) {
+                printf("Not able to crate %s (%s)\n", modified_path,
+                                strerror(errno));
+                return NULL;
+        }
+
+        int blk_sz = SZ_BLOCK;
+        char *buf = (char*)malloc(SZ_BLOCK);
+
+        while (fsize) {
+                read(fs, buf, blk_sz);
+                write(fd, buf, blk_sz);
+
+                fsize -= blk_sz;
+                if (fsize < SZ_BLOCK)
+                        blk_sz = fsize;
+        }
+
+        free(buf);
+
+        close(fd);
+        close(fs);
+
+        return (char*)modified_path;
+}
+
 int
 main(int argc, char **argv) {
     time_t start = time(NULL);
@@ -1323,6 +1363,21 @@ main(int argc, char **argv) {
             printf("(replacing path \"%s\" with \"%s\")\n",
                    update_package, modified_path);
             update_package = modified_path;
+        } else if (strncmp(update_package, "RAW:", 4) == 0) {
+                char *param1 = strchr(update_package, ':');
+                char *param2 = strchr(param1 + 1, ':');
+                int length = param2 - param1 - 1;
+                char raw_size[20];
+                strncpy(raw_size, param1 + 1, length);
+                *(char*)(raw_size + length) = 0;
+
+                char *path = copy_rawimage_to_tmp("/dev/block/mmcblk0p2",
+                                strtoull(raw_size, NULL, 10));
+                if (path) {
+                        printf("(replacing path \"%s\" with \"%s\")\n",
+                                        update_package, path);
+                        update_package = path;
+                }
         }
     }
     printf("\n");
