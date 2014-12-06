@@ -452,6 +452,25 @@ Value* FormatFn(const char* name, State* state, int argc, Expr* argv[]) {
             goto done;
         }
         result = location;
+    } else if (strcmp(fs_type, "vfat") == 0) {
+        char s[128];
+        FILE *fp;
+        int state;
+
+        sprintf(s, "/sbin/newfs_msdos -L vfat %s\n", location);
+
+        fp = popen(s, "r");
+        if (fp == NULL) {
+                perror("err : ");
+        } else {
+                char buf[256];
+                while (fgets(buf, sizeof(buf), fp) != NULL) {
+                        printf("%s", buf);
+                }
+                state = pclose(fp);
+                printf("state of newfs_msdos is %d\n", state);
+                result = location;
+        }
     } else {
         printf("%s: unsupported fs_type \"%s\" partition_type \"%s\"",
                 name, fs_type, partition_type);
