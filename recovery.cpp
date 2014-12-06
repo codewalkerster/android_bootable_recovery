@@ -952,7 +952,35 @@ static char* copy_rawimage_to_tmp(const char *rawimage_path, unsigned long fsize
         close(fd);
         close(fs);
 
+        sync();
+
         return (char*)modified_path;
+}
+
+extern "C" {
+#include <sparse/sparse.h>
+}
+
+int extract_package(struct sparse_file *s, const char* to)
+{
+        int out;
+
+        out = open(to, O_WRONLY | O_CREAT | O_TRUNC, 0644);
+        if (out < 0) {
+                fprintf(stderr, "Cannot open output file %s\n", to);
+                return -1;
+        }
+
+        if (sparse_file_write(s, out, false, false, false) < 0) {
+                fprintf(stderr, "Cannot write output file\n");
+                return -1;
+        }
+
+        sparse_file_destroy(s);
+
+        sync();
+
+        return 0;
 }
 
 int
@@ -1036,6 +1064,20 @@ main(int argc, char **argv) {
         printf(" \"%s\"", argv[arg]);
     }
     printf("\n");
+
+    if (ensure_path_mounted("/cache") != 0) {
+            char *cache_update_path = "/dev/block/mmcblk0p2";
+            int in = open(cache_update_path, O_RDONLY);
+            struct sparse_file *s;
+
+            s = sparse_file_import(in, true, false);
+            if (s) {
+                    ui->SetBackground(RecoveryUI::INSTALLING_UPDATE);
+                    extract_package(s, "/dev/block/mmcblk0p4");
+            }
+
+            close(in);
+    }
 
     if (update_package) {
         // For backwards compatibility on the cache partition only, if
