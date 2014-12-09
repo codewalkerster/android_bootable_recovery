@@ -26,4 +26,8 @@ else
   LOCAL_CFLAGS += -DOVERSCAN_PERCENT=0
 endif
 
+ifeq ($(TARGET_PRODUCT), odroidc)
+    LOCAL_CFLAGS += -DCONFIG_ODROIDC
+endif
+
 include $(BUILD_STATIC_LIBRARY)

@@ -69,6 +69,15 @@ static int gr_vt_fd = -1;
 static struct fb_var_screeninfo vi;
 static struct fb_fix_screeninfo fi;
 
+#if defined(CONFIG_ODROIDC)
+static void video_write(const char *node, const char *val)
+{
+        int fd = open(node, O_WRONLY);
+        write(fd, val, strlen(val));
+        close(fd);
+}
+#endif
+
 static int get_framebuffer(GGLSurface *fb)
 {
     int fd;
@@ -115,6 +124,14 @@ static int get_framebuffer(GGLSurface *fb)
       vi.transp.offset  = 0;
       vi.transp.length  = 0;
     }
+
+#if defined(CONFIG_ODROIDC)
+    vi.xres = 1280;
+    vi.yres = 720;
+    vi.xres_virtual = 1280;
+    vi.yres_virtual = 1440;
+#endif
+
     if (ioctl(fd, FBIOPUT_VSCREENINFO, &vi) < 0) {
         perror("failed to put fb0 info");
         close(fd);
@@ -160,6 +177,15 @@ static int get_framebuffer(GGLSurface *fb)
     fb->data = (void*) (((unsigned) bits) + vi.yres * fi.line_length);
     fb->format = PIXEL_FORMAT;
     memset(fb->data, 0, vi.yres * fi.line_length);
+
+#if defined(CONFIG_ODROIDC)
+    video_write("/sys/class/display/mode", "720p");
+    video_write("/sys/class/ppmgr/ppscaler", "0");
+    video_write("/sys/class/graphics/fb0/free_scale", "0");
+    video_write("/sys/class/graphics/fb0/freescale_mode", "1");
+    video_write("/sys/class/graphics/fb0/free_scale_axis", "0 0 1279 719");
+    video_write("/sys/class/graphics/fb0/window_axis", "0 0 1279 719");
+#endif
 
     return fd;
 }
