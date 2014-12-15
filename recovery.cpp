@@ -86,6 +86,7 @@ static const struct option OPTIONS[] = {
   { "security", no_argument, NULL, 'e'},
   { "wipe_ab", no_argument, NULL, 0 },
   { "wipe_package_size", required_argument, NULL, 0 },
+  { "selfinstall", no_argument, NULL, 'f' },
   { NULL, 0, NULL, 0 },
 };
 
@@ -1612,6 +1613,7 @@ int main(int argc, char **argv) {
     bool shutdown_after = false;
     int retry_count = 0;
     bool security_update = false;
+    bool selfinstall = false;
 
     int arg;
     int option_index;
@@ -1648,6 +1650,7 @@ int main(int argc, char **argv) {
             }
             break;
         }
+        case 'f': selfinstall = 1; break;
         case '?':
             LOGE("Invalid command argument\n");
             continue;
@@ -1697,7 +1700,7 @@ int main(int argc, char **argv) {
     }
     printf("\n");
 
-    if (ensure_path_mounted("/cache") != 0) {
+    if (selfinstall) {
             char *cache_update_path = "/dev/block/mmcblk0p2";
             int in = open(cache_update_path, O_RDONLY);
             struct sparse_file *s;
