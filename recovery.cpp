@@ -62,6 +62,7 @@ static const struct option OPTIONS[] = {
   { "stages", required_argument, NULL, 'g' },
   { "shutdown_after", no_argument, NULL, 'p' },
   { "reason", required_argument, NULL, 'r' },
+  { "selfinstall", no_argument, NULL, 'f' },
   { NULL, 0, NULL, 0 },
 };
 
@@ -1076,6 +1077,7 @@ main(int argc, char **argv) {
     int wipe_data = 0, wipe_cache = 0, show_text = 0;
     bool just_exit = false;
     bool shutdown_after = false;
+    bool selfinstall = false;
 
     int arg;
     while ((arg = getopt_long(argc, argv, "", OPTIONS, NULL)) != -1) {
@@ -1097,6 +1099,7 @@ main(int argc, char **argv) {
         }
         case 'p': shutdown_after = true; break;
         case 'r': reason = optarg; break;
+        case 'f': selfinstall = 1; break;
         case '?':
             LOGE("Invalid command argument\n");
             continue;
@@ -1143,7 +1146,7 @@ main(int argc, char **argv) {
     }
     printf("\n");
 
-    if (ensure_path_mounted("/cache") != 0) {
+    if (selfinstall) {
             char *cache_update_path = "/dev/block/mmcblk0p2";
             int in = open(cache_update_path, O_RDONLY);
             struct sparse_file *s;
