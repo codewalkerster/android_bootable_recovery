@@ -1657,6 +1657,8 @@ main(int argc, char **argv) {
     printf("\n");
 
     if (selfinstall) {
+            ensure_path_unmounted("/cache");
+
             char *cache_update_path = "/dev/block/mmcblk0p2";
             int in = open(cache_update_path, O_RDONLY);
             struct sparse_file *s;
