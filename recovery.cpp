@@ -1096,6 +1096,14 @@ main(int argc, char **argv) {
             printf("(replacing path \"%s\" with \"%s\")\n",
                    update_package, modified_path);
             update_package = modified_path;
+        } else if (strncmp(update_package, "/storage/sdcard0/", 17) == 0) {
+            int len = strlen(update_package);
+            char* modified_path = (char*)malloc(len);
+            strlcpy(modified_path, "/sdcard/", len);
+            strlcat(modified_path, update_package + 17, len);
+            printf("(replacing path \"%s\" with \"%s\")\n",
+                   update_package, modified_path);
+            update_package = modified_path;
         } else if (strncmp(update_package, "RAW:", 4) == 0) {
                 char *param1 = strchr(update_package, ':');
                 char *param2 = strchr(param1 + 1, ':');
