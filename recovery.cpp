@@ -1163,6 +1163,7 @@ main(int argc, char **argv) {
     }
 
     if (update_package) {
+        LOGE("update_package = %s\n", update_package);
         // For backwards compatibility on the cache partition only, if
         // we're given an old 'root' path "CACHE:foo", change it to
         // "/cache/foo".
@@ -1171,6 +1172,14 @@ main(int argc, char **argv) {
             char* modified_path = (char*)malloc(len);
             strlcpy(modified_path, "/cache/", len);
             strlcat(modified_path, update_package+6, len);
+            printf("(replacing path \"%s\" with \"%s\")\n",
+                   update_package, modified_path);
+            update_package = modified_path;
+        } else if (strncmp(update_package, "/storage/emulated/", 18) == 0) {
+            int len = strlen(update_package);
+            char* modified_path = (char*)malloc(len);
+            strlcpy(modified_path, "/data/media/", len);
+            strlcat(modified_path, update_package + 18, len);
             printf("(replacing path \"%s\" with \"%s\")\n",
                    update_package, modified_path);
             update_package = modified_path;
@@ -1197,6 +1206,8 @@ main(int argc, char **argv) {
                                         update_package, path);
                         update_package = path;
                 }
+        } else {
+            LOGE("wrong path\n");
         }
     }
     printf("\n");
