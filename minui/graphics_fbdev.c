@@ -113,6 +113,10 @@ static gr_surface fbdev_init(minui_backend* backend) {
     // If you have a device that actually *needs* another pixel format
     // (ie, BGRX, or 565), patches welcome...
 
+    vi.red.offset = 0;
+    vi.green.offset = 8;
+    vi.blue.offset = 16;
+
     printf("fb0 reports (possibly inaccurate):\n"
            "  vi.bits_per_pixel = %d\n"
            "  vi.red.offset   = %3d   .length = %3d\n"
