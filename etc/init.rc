@@ -5,7 +5,7 @@ on early-init
     start healthd
 
 on init
-    export PATH /sbin
+    export PATH /sbin:/system/bin:/bin
     export ANDROID_ROOT /system
     export ANDROID_DATA /data
     export EXTERNAL_STORAGE /sdcard
