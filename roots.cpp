@@ -398,7 +398,7 @@ int format_volume(const char* volume) {
         }
         int result;
         if (strcmp(v->fs_type, "ext4") == 0) {
-            if (ext4_erase_volum(volume)) {
+            if (ext4_erase_volum(v->blk_device)) {
                 LOGE("format_volume: ext4_erase_volum failed on %s\n", v->blk_device);
                 return -1;
             }
