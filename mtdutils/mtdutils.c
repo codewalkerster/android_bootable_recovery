@@ -401,7 +401,7 @@ int ext4_erase_volum(const char *volume)
     int fd =0, err=0;
     char devname[128] = {0};
 
-    sprintf(devname, "/dev/block%s", volume);
+    sprintf(devname, "%s", volume);
     printf("ext4_erase_volum: erase %s\n", devname);
     fd = open(devname, O_RDWR);
     if (fd < 0) {
