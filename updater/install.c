@@ -278,7 +278,7 @@ Value* FormatFn(const char* name, State* state, int argc, Expr* argv[]) {
         FILE *fp;
         int state;
 
-        sprintf(s, "/sbin/newfs_msdos -L vfat %s\n", location);
+        sprintf(s, "/bin/newfs_msdos -L vfat %s\n", location);
 
         fp = popen(s, "r");
         if (fp == NULL) {
