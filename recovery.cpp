@@ -57,6 +57,7 @@ static const struct option OPTIONS[] = {
   { "just_exit", no_argument, NULL, 'x' },
   { "locale", required_argument, NULL, 'l' },
   { "selfinstall", no_argument, NULL, 'f' },
+  { "stages", required_argument, NULL, 'g' },
   { NULL, 0, NULL, 0 },
 };
 
@@ -77,6 +78,7 @@ static const char *SIDELOAD_TEMP_DIR = "/tmp/sideload";
 RecoveryUI* ui = NULL;
 char* locale = NULL;
 char recovery_version[PROPERTY_VALUE_MAX+1];
+char* stage = NULL;
 
 /*
  * The recovery tool communicates with the main system through /cache files.
@@ -173,6 +175,7 @@ get_args(int *argc, char ***argv) {
     struct bootloader_message boot;
     memset(&boot, 0, sizeof(boot));
     get_bootloader_message(&boot);  // this may fail, leaving a zeroed structure
+    stage = strndup(boot.stage, sizeof(boot.stage));
 
     if (boot.command[0] != 0 && boot.command[0] != 255) {
         LOGI("Boot command: %.*s\n", sizeof(boot.command), boot.command);
@@ -1030,6 +1033,14 @@ main(int argc, char **argv) {
         case 'x': just_exit = true; break;
         case 'l': locale = optarg; break;
         case 'f': selfinstall = 1; break;
+        case 'g': {
+            if (stage == NULL || *stage == '\0') {
+                char buffer[20] = "1/";
+                strncat(buffer, optarg, sizeof(buffer)-3);
+                stage = strdup(buffer);
+            }
+            break;
+        }
         case '?':
             LOGE("Invalid command argument\n");
             continue;
@@ -1040,12 +1051,19 @@ main(int argc, char **argv) {
         load_locale_from_cache();
     }
     printf("locale is [%s]\n", locale);
+    printf("stage is [%s]\n", stage, stage);
 
     Device* device = make_device();
     ui = device->GetUI();
     gCurrentUI = ui;
 
     ui->Init();
+
+    int st_cur, st_max;
+    if (stage != NULL && sscanf(stage, "%d/%d", &st_cur, &st_max) == 2) {
+        ui->SetStage(st_cur, st_max);
+    }
+
     ui->SetLocale(locale);
     ui->SetBackground(RecoveryUI::NONE);
     if (show_text) ui->ShowText(true);
