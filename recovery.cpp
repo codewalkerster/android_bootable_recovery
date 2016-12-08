@@ -1053,7 +1053,6 @@ static bool wipe_data(int should_confirm, Device* device) {
     modified_flash = true;
 
     ui->Print("\n-- Wiping data...\n");
-    instaboot_clear();
 
     bool success =
         device->PreWipeData() &&
@@ -1215,8 +1214,6 @@ static int ext_update(Device* device, bool wipe_cache) {
 
     ui->Print("\n-- Install %s ...\n", update_package);
     set_sdcard_update_bootloader_message();
-    instaboot_disable();
-    instaboot_clear();
     status = install_package(update_package, &wipe_cache, TEMPORARY_INSTALL_FILE, true);
 
     if (status == INSTALL_SUCCESS && wipe_cache) {
@@ -1253,8 +1250,6 @@ static int cache_update(Device* device, bool wipe_cache) {
 
     ui->Print("\n-- Install %s ...\n", update_package);
     set_sdcard_update_bootloader_message();
-    instaboot_disable();
-    instaboot_clear();
     status = install_package(update_package, &wipe_cache, TEMPORARY_INSTALL_FILE, true);
     if (status == INSTALL_SUCCESS && wipe_cache) {
         ui->Print("\n-- Wiping cache (at package request)...\n");
@@ -1731,8 +1726,6 @@ main(int argc, char **argv) {
 
     if (update_package != NULL) {
 
-        instaboot_disable();
-        instaboot_clear();
         status = install_package(update_package, &should_wipe_cache, TEMPORARY_INSTALL_FILE, true);
         if (status == INSTALL_SUCCESS && should_wipe_cache) {
             wipe_cache(false, device);
@@ -1751,8 +1744,6 @@ main(int argc, char **argv) {
     }
 
     if (update_patch != NULL) {
-        instaboot_disable();
-        instaboot_clear();
         status = install_package(update_patch, &should_wipe_cache, TEMPORARY_INSTALL_FILE, true);
         if (status != INSTALL_SUCCESS) {
             ui->Print("Installation aborted.\n");
