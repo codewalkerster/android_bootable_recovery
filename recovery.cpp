@@ -1084,7 +1084,6 @@ static bool wipe_data_with_headers(
     modified_flash = true;
 
     ui->Print("\n-- Wiping data...\n");
-    instaboot_clear();
 
     bool success =
         device->PreWipeData() &&
@@ -1775,7 +1774,6 @@ main(int argc, char **argv) {
             ui->Print("Write key complete.\n");
         }
      } else if (wipe_data_condition) {
-        instaboot_clear();
         if (erase_data_condition("/data")) status = INSTALL_ERROR;
         if (!wipe_cache(false, device)) {
             status = INSTALL_ERROR;
