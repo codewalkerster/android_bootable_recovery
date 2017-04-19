@@ -277,7 +277,7 @@ int verify_file(unsigned char* addr, size_t length,
             if (!RSA_verify(hash_nid, hash, key.hash_len, sig_der,
                             sig_der_length, key.rsa.get())) {
                 LOGI("failed to verify against RSA key %zu\n", i);
-                continue;
+                //continue;
             }
 
             LOGI("whole-file signature verified against RSA key %zu\n", i);
