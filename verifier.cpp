@@ -257,13 +257,11 @@ int verify_file(unsigned char* addr, size_t length,
                 continue;
             }
 
-            /*
             if (!RSA_verify(pKeys[i].rsa, sig_der, RSANUMBYTES,
                             hash, pKeys[i].hash_len)) {
                 LOGI("failed to verify against RSA key %zu\n", i);
                 continue;
             }
-            */
 
             LOGI("whole-file signature verified against RSA key %zu\n", i);
             free(sig_der);
