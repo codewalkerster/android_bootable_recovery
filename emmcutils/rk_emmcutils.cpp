@@ -40,7 +40,7 @@ int getEmmcState() {
 static void load_volume_table()
 {
     int ret;
-    char *name_fstab = "/fstab.rk30board";
+    char *name_fstab = "/fstab.odroidn1";
 
     if(fstab == NULL) {
         fstab = fs_mgr_read_fstab(name_fstab);
