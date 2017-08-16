@@ -1075,7 +1075,7 @@ Value* WriteRawImageFn(const char* name, State* state, int argc, Expr* argv[]) {
     char* result = NULL;
     Value* partition_value;
     Value* contents;
-    char device[100];
+    char *device;
     int emmcEnabled;
     bool success;
 
@@ -1103,7 +1103,7 @@ Value* WriteRawImageFn(const char* name, State* state, int argc, Expr* argv[]) {
     emmcEnabled = getEmmcState();
 
     if(emmcEnabled){
-        transformPath(partition, device);
+        device = getDevicePath(partition);
         FILE *dest_partition = fopen(device, "wb");
         if(dest_partition == NULL){
             printf("%s: no emmc partition named \"%s\"\n", name, device);
