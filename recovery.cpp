@@ -95,7 +95,6 @@ static const struct option OPTIONS[] = {
   { "wipe_ab", no_argument, NULL, 0 },
   { "wipe_package_size", required_argument, NULL, 0 },
   { "resize_partition", required_argument, NULL, 'r'+'p' },
-  { "factory_mode", required_argument, NULL, 'f' },
   { NULL, 0, NULL, 0 },
 };
 
@@ -1679,7 +1678,6 @@ int main(int argc, char **argv) {
     const char *send_intent = NULL;
     const char *update_package = NULL;
     const char *update_rkimage = NULL;
-    const char *factory_mode = NULL;
     char *sdboot_update_package = NULL;
     bool should_wipe_data = false;
     bool should_wipe_all = false;
@@ -1740,7 +1738,6 @@ int main(int argc, char **argv) {
                 sdboot_update_package = strdup(optarg);
             }
             break;
-        case 'f': factory_mode = optarg; break;
         case '?':
             LOGE("Invalid command argument\n");
             continue;
@@ -1893,8 +1890,6 @@ int main(int argc, char **argv) {
             ui->Print("Installation aborted.\n");
         else
             bAutoUpdateComplete=true;
-    }else if (factory_mode != NULL){
-       status = rksdboot.do_rk_factory_mode();
     }else if (sdboot_update_package != NULL){
         printf("bSDBoot = %d, sdboot_update_package=%s\n", rksdboot.isSDboot(), sdboot_update_package);
         status = rksdboot.do_rk_mode_update(sdboot_update_package);
