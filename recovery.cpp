@@ -70,7 +70,6 @@
 #include "rkimage.h"
 #include <fs_mgr.h>
 #include "sdboot.h"
-#include "rktools.h"
 
 struct selabel_handle *sehandle;
 
@@ -1823,10 +1822,7 @@ int main(int argc, char **argv) {
             log_failure_code(kBootreasonInBlacklist, update_package);
             status = INSTALL_SKIPPED;
         } else {
-            const char *reallyPath = check_media_package(update_package);
-            if(reallyPath == NULL)
-                reallyPath = update_package;
-            status = install_package(reallyPath, &should_wipe_cache,
+            status = install_package(update_package, &should_wipe_cache,
                                      TEMPORARY_INSTALL_FILE, true, retry_count);
             if (status == INSTALL_SUCCESS && should_wipe_cache) {
                 wipe_cache(false, device);
@@ -1863,10 +1859,7 @@ int main(int argc, char **argv) {
         }
     }else if (update_rkimage != NULL){
     //    I("to install rk_img : %s.", update_rkimage);
-        const char *reallyPath = check_media_package(update_rkimage);
-        if(reallyPath == NULL)
-            reallyPath = update_rkimage;
-        status = install_rkimage(reallyPath);
+        status = install_rkimage(update_rkimage);
         if (status != INSTALL_SUCCESS)
             ui->Print("Installation aborted.\n");
         else
