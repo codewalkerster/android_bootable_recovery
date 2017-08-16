@@ -32,8 +32,6 @@
 #include "make_ext4fs.h"
 #include "wipe.h"
 #include "cryptfs.h"
-#include "emmcutils/rk_emmcutils.h"
-
 
 static struct fstab *fstab = NULL;
 
@@ -44,13 +42,7 @@ void load_volume_table()
     int i;
     int ret;
 
-    int emmcState = getEmmcState();
-    if(emmcState) {
-        fstab = fs_mgr_read_fstab("/etc/recovery.emmc.fstab");
-    }else {
-        fstab = fs_mgr_read_fstab("/etc/recovery.fstab");
-    }
-
+    fstab = fs_mgr_read_fstab("/etc/recovery.fstab");
     if (!fstab) {
         LOGE("failed to read /etc/recovery.fstab\n");
         return;

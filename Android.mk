@@ -83,8 +83,7 @@ LOCAL_STATIC_LIBRARIES := \
     liblog \
     libselinux \
     libm \
-    libc \
-    librk_emmcutils
+    libc
 
 LOCAL_HAL_STATIC_LIBRARIES := libhealthd
 
@@ -157,5 +156,4 @@ include \
     $(LOCAL_PATH)/tools/Android.mk \
     $(LOCAL_PATH)/uncrypt/Android.mk \
     $(LOCAL_PATH)/updater/Android.mk \
-    $(LOCAL_PATH)/update_verifier/Android.mk \
-    $(LOCAL_PATH)/emmcutils/Android.mk
+    $(LOCAL_PATH)/update_verifier/Android.mk
