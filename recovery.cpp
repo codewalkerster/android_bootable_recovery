@@ -66,8 +66,6 @@
 #include "ui.h"
 #include "unique_fd.h"
 #include "screen_ui.h"
-#include "mtdutils/rk29.h"
-#include <fs_mgr.h>
 
 struct selabel_handle *sehandle;
 
@@ -86,7 +84,6 @@ static const struct option OPTIONS[] = {
   { "shutdown_after", no_argument, NULL, 'p' },
   { "reason", required_argument, NULL, 'r' },
   { "security", no_argument, NULL, 'e'},
-  { "wipe_all", no_argument, NULL, 'w'+'a' },
   { "wipe_ab", no_argument, NULL, 0 },
   { "wipe_package_size", required_argument, NULL, 0 },
   { NULL, 0, NULL, 0 },
@@ -1543,6 +1540,7 @@ int main(int argc, char **argv) {
     // redirect_stdio should be called only in non-sideload mode. Otherwise
     // we may have two logger instances with different timestamps.
     redirect_stdio(TEMPORARY_LOG_FILE);
+
     printf("Starting recovery (pid %d) on %s", getpid(), ctime(&start));
 
     load_volume_table();
@@ -1553,7 +1551,6 @@ int main(int argc, char **argv) {
     const char *send_intent = NULL;
     const char *update_package = NULL;
     bool should_wipe_data = false;
-    bool should_wipe_all = false;
     bool should_wipe_cache = false;
     bool should_wipe_ab = false;
     size_t wipe_package_size = 0;
@@ -1590,7 +1587,6 @@ int main(int argc, char **argv) {
         case 'p': shutdown_after = true; break;
         case 'r': reason = optarg; break;
         case 'e': security_update = true; break;
-        case 'w'+'a': { should_wipe_all = true; should_wipe_data = true; should_wipe_cache = true;} break;
         case 0: {
             if (strcmp(OPTIONS[option_index].name, "wipe_ab") == 0) {
                 should_wipe_ab = true;
@@ -1740,16 +1736,6 @@ int main(int argc, char **argv) {
         if (!wipe_data(false, device)) {
             status = INSTALL_ERROR;
         }
-        /*
-        if(should_wipe_all) {
-            printf("resize /system \n");
-            Volume* v = volume_for_path("/system");
-            if(rk_check_and_resizefs(v->blk_device)) {
-                ui->Print("check and resize /system failed!\n");
-                status = INSTALL_ERROR;
-            }
-        }
-        */
     } else if (should_wipe_cache) {
         if (!wipe_cache(false, device)) {
             status = INSTALL_ERROR;
