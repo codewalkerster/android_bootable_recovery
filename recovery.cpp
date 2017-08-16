@@ -67,7 +67,6 @@
 #include "unique_fd.h"
 #include "screen_ui.h"
 #include "mtdutils/rk29.h"
-#include "rkimage.h"
 #include <fs_mgr.h>
 
 struct selabel_handle *sehandle;
@@ -75,7 +74,6 @@ struct selabel_handle *sehandle;
 static const struct option OPTIONS[] = {
   { "send_intent", required_argument, NULL, 'i' },
   { "update_package", required_argument, NULL, 'u' },
-  { "update_rkimage", required_argument, NULL, 'k' },
   { "retry_count", required_argument, NULL, 'n' },
   { "wipe_data", no_argument, NULL, 'w' },
   { "wipe_cache", no_argument, NULL, 'c' },
@@ -135,7 +133,6 @@ char* stage = NULL;
 char* reason = NULL;
 bool modified_flash = false;
 static bool has_cache = false;
-bool bIfUpdateLoader = false;
 
 /*
  * The recovery tool communicates with the main system through /cache files.
@@ -1571,7 +1568,6 @@ int main(int argc, char **argv) {
 
     const char *send_intent = NULL;
     const char *update_package = NULL;
-    const char *update_rkimage = NULL;
     bool should_wipe_data = false;
     bool should_wipe_all = false;
     bool should_wipe_cache = false;
@@ -1592,7 +1588,6 @@ int main(int argc, char **argv) {
         case 'i': send_intent = optarg; break;
         case 'n': android::base::ParseInt(optarg, &retry_count, 0); break;
         case 'u': update_package = optarg; break;
-        case 'k': update_rkimage = optarg;break;
         case 'w': should_wipe_data = true; break;
         case 'c': should_wipe_cache = true; break;
         case 't': show_text = true; break;
@@ -1760,14 +1755,7 @@ int main(int argc, char **argv) {
                 bAutoUpdateComplete=true;
             }
         }
-    }else if (update_rkimage != NULL){
-    //    I("to install rk_img : %s.", update_rkimage);
-        status = install_rkimage(update_rkimage);
-        if (status != INSTALL_SUCCESS)
-            ui->Print("Installation aborted.\n");
-        else
-            bAutoUpdateComplete=true;
-    }else if (should_wipe_data) {
+    } else if (should_wipe_data) {
         if (!wipe_data(false, device)) {
             status = INSTALL_ERROR;
         }
