@@ -97,7 +97,7 @@ static bool read_misc_partition(void* p, size_t size, size_t offset, std::string
   if (!strcmp(record->fs_type, "raw")) {
       if (strncmp(record->fs_options, opt_offset, strlen(opt_offset)))
           offset = 0;
-      offset = atoi(record->fs_options + strlen(opt_offset));
+      offset = atoi(record->fs_options + strlen(opt_offset)) * 512;
   }
 
   std::string misc_blk_device = record->blk_device;
@@ -137,7 +137,7 @@ static bool write_misc_partition(const void* p, size_t size, size_t offset, std:
   if (!strcmp(record->fs_type, "raw")) {
       if (strncmp(record->fs_options, opt_offset, strlen(opt_offset)))
           offset = 0;
-      offset = atoi(record->fs_options + strlen(opt_offset));
+      offset = atoi(record->fs_options + strlen(opt_offset)) * 512;
   }
 
   std::string misc_blk_device = record->blk_device;
