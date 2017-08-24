@@ -19,6 +19,7 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <string.h>
+#include <stdlib.h>
 #include <sys/system_properties.h>
 
 #include <string>
@@ -30,14 +31,16 @@
 #include <fs_mgr.h>
 
 static struct fstab* read_fstab(std::string* err) {
-  // The fstab path is always "/fstab.${ro.hardware}".
-  std::string fstab_path = "/fstab.";
+  // The fstab path is always "/etc/recovery.fstab"
+  std::string fstab_path = "/etc/recovery.fstab";
+  /*
   char value[PROP_VALUE_MAX];
   if (__system_property_get("ro.hardware", value) == 0) {
     *err = "failed to get ro.hardware";
     return nullptr;
   }
   fstab_path += value;
+  */
   struct fstab* fstab = fs_mgr_read_fstab(fstab_path.c_str());
   if (fstab == nullptr) {
     *err = "failed to read " + fstab_path;
@@ -45,17 +48,17 @@ static struct fstab* read_fstab(std::string* err) {
   return fstab;
 }
 
-static std::string get_misc_blk_device(std::string* err) {
+static fstab_rec* get_misc_record(std::string* err) {
   struct fstab* fstab = read_fstab(err);
   if (fstab == nullptr) {
-    return "";
+      return nullptr;
   }
   fstab_rec* record = fs_mgr_get_entry_for_mount_point(fstab, "/misc");
   if (record == nullptr) {
-    *err = "failed to find /misc partition";
-    return "";
+      *err = "failed to find /misc partition";
+      return nullptr;
   }
-  return record->blk_device;
+  return record;
 }
 
 // In recovery mode, recovery can get started and try to access the misc
@@ -81,8 +84,23 @@ static bool wait_for_device(const std::string& blk_device, std::string* err) {
   return ret == 0;
 }
 
+static const char * opt_offset= "offset=";
+
 static bool read_misc_partition(void* p, size_t size, size_t offset, std::string* err) {
-  std::string misc_blk_device = get_misc_blk_device(err);
+  fstab_rec* record = get_misc_record(err);
+
+  if (record == nullptr) {
+      return false;
+  }
+
+// if fstype is raw, get offset from options and read from that point
+  if (!strcmp(record->fs_type, "raw")) {
+      if (strncmp(record->fs_options, opt_offset, strlen(opt_offset)))
+          offset = 0;
+      offset = atoi(record->fs_options + strlen(opt_offset));
+  }
+
+  std::string misc_blk_device = record->blk_device;
   if (misc_blk_device.empty()) {
     return false;
   }
@@ -109,7 +127,20 @@ static bool read_misc_partition(void* p, size_t size, size_t offset, std::string
 }
 
 static bool write_misc_partition(const void* p, size_t size, size_t offset, std::string* err) {
-  std::string misc_blk_device = get_misc_blk_device(err);
+  fstab_rec* record = get_misc_record(err);
+
+  if (record == nullptr) {
+      return false;
+  }
+
+// if fstype is raw, get offset from options and write from that point
+  if (!strcmp(record->fs_type, "raw")) {
+      if (strncmp(record->fs_options, opt_offset, strlen(opt_offset)))
+          offset = 0;
+      offset = atoi(record->fs_options + strlen(opt_offset));
+  }
+
+  std::string misc_blk_device = record->blk_device;
   if (misc_blk_device.empty()) {
     return false;
   }
