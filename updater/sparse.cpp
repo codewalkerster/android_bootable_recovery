@@ -21,6 +21,8 @@
 
 #include "edify/expr.h"
 
+#include "sparse.h"
+
 #ifdef DEBUG
 #define FBTDBG(fmt, args...)\
         printf("DEBUG: [%s]: %d:\n"fmt, __func__, __LINE__, ##args)
@@ -83,10 +85,10 @@ typedef struct chunk_header {
 
 #define SPARSE_HEADER_MAJOR_VER 1
 #include <sys/statvfs.h>
-static int do_unsparse(int fd, unsigned char *source,
+static int do_unsparse(int fd, char *source,
         unsigned int sector)
 {
-    sparse_header_t *header = (void *) source;
+    sparse_header_t *header = (sparse_header_t *) source;
     u32 i;
     unsigned long section_size;
     u64 outlen = 0;
@@ -134,7 +136,7 @@ static int do_unsparse(int fd, unsigned char *source,
     for (i = 0; i < header->total_chunks; i++) {
         u64 clen = 0;
         u64 blkcnt;
-        chunk_header_t *chunk = (void *) source;
+        chunk_header_t *chunk = (chunk_header_t *) source;
 
         FBTINFO("chunk_header:\n");
         FBTINFO("\t    chunk_type=%u\n", chunk->chunk_type);
@@ -211,7 +213,7 @@ static int do_unsparse(int fd, unsigned char *source,
     return 0;
 }
 
-Value* ExtractSparseToFile(State *state, void *image_start_ptr, char *name)
+bool  ExtractSparseToFile(State *state, char *image_start_ptr, char *name)
 {
     /* Check if we have sparse compressed image */
     if (((sparse_header_t *)image_start_ptr)->magic

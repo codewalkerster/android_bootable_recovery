@@ -58,6 +58,7 @@
 #include "updater.h"
 #include "install.h"
 #include "tune2fs.h"
+#include "sparse.h"
 
 #ifdef USE_EXT4
 #include "make_ext4fs.h"
@@ -673,13 +674,15 @@ Value* WriteSparseImageFn(const char* name, State* state,
             goto done1;
         }
 
-        FILE* fd = fopen(dest_path, "wb");
-        if (fd == NULL) {
-            printf("%s: can't open %s for write: %s\n",
-                    ptnname, dest_path, strerror(errno));
-            goto done1;
+        {
+            FILE* fd = fopen(dest_path, "wb");
+            if (fd == NULL) {
+                printf("%s: can't open %s for write: %s\n",
+                        ptnname, dest_path, strerror(errno));
+                goto done1;
+            }
+            fclose(fd);
         }
-        fclose(fd);
 
         success = ExtractSparseToFile(state, v->data, dest_path);
 
