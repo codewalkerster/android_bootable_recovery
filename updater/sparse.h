@@ -20,6 +20,9 @@
 #ifndef _UPDATER_SPARSE_H_
 #define _UPDATER_SPARSE_H_
 
+#include <string>
+
+extern std::string fmt;
 bool ExtractSparseToFile(State *state, char *image_start_ptr, char *name);
 
 #endif

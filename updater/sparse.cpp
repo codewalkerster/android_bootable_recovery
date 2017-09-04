@@ -25,28 +25,28 @@
 
 #ifdef DEBUG
 #define FBTDBG(fmt, args...)\
-        printf("DEBUG: [%s]: %d:\n"fmt, __func__, __LINE__, ##args)
+        printf("DEBUG: [%s]: %d:\n" fmt, __func__, __LINE__, ##args)
 #else
 #define FBTDBG(fmt, args...) do {} while (0)
 #endif
 
 #ifdef INFO
 #define FBTINFO(fmt, args...)\
-        printf("INFO: [%s]: "fmt, __func__, ##args)
+        printf("INFO: [%s]: " fmt, __func__, ##args)
 #else
 #define FBTINFO(fmt, args...) do {} while (0)
 #endif
 
 #ifdef WARN
 #define FBTWARN(fmt, args...)\
-        printf("WARNING: [%s]: "fmt, __func__, ##args)
+        printf("WARNING: [%s]: " fmt, __func__, ##args)
 #else
 #define FBTWARN(fmt, args...) do {} while (0)
 #endif
 
 #ifdef ERR
 #define FBTERR(fmt, args...)\
-        printf("ERROR: [%s]: "fmt, __func__, ##args)
+        printf("ERROR: [%s]: " fmt, __func__, ##args)
 #else
 #define FBTERR(fmt, args...) do {} while (0)
 #endif
@@ -86,7 +86,7 @@ typedef struct chunk_header {
 #define SPARSE_HEADER_MAJOR_VER 1
 #include <sys/statvfs.h>
 static int do_unsparse(int fd, char *source,
-        unsigned int sector)
+        u64 sector)
 {
     sparse_header_t *header = (sparse_header_t *) source;
     u32 i;
@@ -98,6 +98,9 @@ static int do_unsparse(int fd, char *source,
 
     ioctl(fd, BLKGETSIZE, &blocks);
     ioctl(fd, BLKSSZGET, &blk_sz);
+
+    // aligned type size
+    blk_sz = 0x00000000FFFFFFFF & blk_sz;
 
     section_size = blocks * blk_sz;
 
@@ -150,7 +153,7 @@ static int do_unsparse(int fd, char *source,
             case CHUNK_TYPE_RAW:
                 clen = (u64)chunk->chunk_sz * header->blk_sz;
                 FBTINFO("sparse: RAW blk=%d bsz=%d:"
-                        " write(sector=%d,clen=%d)\n",
+                        " write(sector=%llu,clen=%llu)\n",
                         chunk->chunk_sz, header->blk_sz, sector, clen);
 
                 if (chunk->total_sz != (clen + sizeof(chunk_header_t))) {
@@ -167,12 +170,12 @@ static int do_unsparse(int fd, char *source,
                 }
                 blkcnt = clen / blk_sz;
                 FBTDBG("sparse: RAW blk=%d bsz=%d:"
-                        " write(sector=%d,clen=%llu)\n",
+                        " write(sector=%llu,clen=%llu)\n",
                         chunk->chunk_sz, header->blk_sz, sector, clen);
 
                 lseek64(fd, (off64_t)sector * blk_sz, SEEK_SET);
                 if (write(fd, source, (size_t)clen) != clen) {
-                    printf("sparse: block write to sector %d"
+                    printf("sparse: block write to sector %llu"
                             " of %llu bytes (%llu blkcnt) failed\n",
                             sector, clen, blkcnt);
                     return 1;
@@ -189,7 +192,7 @@ static int do_unsparse(int fd, char *source,
                 }
                 clen = (u64)chunk->chunk_sz * header->blk_sz;
                 FBTDBG("sparse: DONT_CARE blk=%d bsz=%d:"
-                        " skip(sector=%d,clen=%llu)\n",
+                        " skip(sector=%llu,clen=%llu)\n",
                         chunk->chunk_sz, header->blk_sz, sector, clen);
 
                 outlen += clen;
