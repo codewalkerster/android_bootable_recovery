@@ -31,16 +31,14 @@
 #include <fs_mgr.h>
 
 static struct fstab* read_fstab(std::string* err) {
-  // The fstab path is always "/etc/recovery.fstab"
-  std::string fstab_path = "/etc/recovery.fstab";
-  /*
+  // The fstab path is always "/fstab.${ro.hardware}".
+  std::string fstab_path = "/fstab.";
   char value[PROP_VALUE_MAX];
   if (__system_property_get("ro.hardware", value) == 0) {
     *err = "failed to get ro.hardware";
     return nullptr;
   }
   fstab_path += value;
-  */
   struct fstab* fstab = fs_mgr_read_fstab(fstab_path.c_str());
   if (fstab == nullptr) {
     *err = "failed to read " + fstab_path;
