@@ -87,6 +87,9 @@ static const struct option OPTIONS[] = {
   { "wipe_ab", no_argument, NULL, 0 },
   { "wipe_package_size", required_argument, NULL, 0 },
   { "selfinstall", no_argument, NULL, 'f' },
+  { "resize_partition", required_argument, NULL, 'r'+'p' },
+  { "factory_mode", required_argument, NULL, 'f' },
+  { "pcba_test", required_argument, NULL, 'p'+'t' },
   { NULL, 0, NULL, 0 },
 };
 
@@ -128,6 +131,8 @@ char* stage = NULL;
 char* reason = NULL;
 bool modified_flash = false;
 static bool has_cache = false;
+bool bIfUpdateLoader = false;
+bool bWipeAfterUpdate = false;
 
 /*
  * The recovery tool communicates with the main system through /cache files.
@@ -515,6 +520,7 @@ static void copy_logs() {
     chmod(LAST_INSTALL_FILE, 0644);
     sync();
 }
+
 
 // clear the recovery command and prepare to boot a (hopefully working) system,
 // copy our log file to cache as well (for the system to read), and
@@ -1823,7 +1829,7 @@ int main(int argc, char **argv) {
                 // If this is an eng or userdebug build, then automatically
                 // turn the text display on if the script fails so the error
                 // message is visible.
-                if (is_ro_debuggable()) {
+                if (is_ro_debuggable() || true) {
                     ui->ShowText(true);
                 }
             }
@@ -1867,7 +1873,7 @@ int main(int argc, char **argv) {
         // http://b/17489952
         // If this is an eng or userdebug build, automatically turn on the
         // text display if no command is specified.
-        if (is_ro_debuggable()) {
+        if (is_ro_debuggable() || true) {
             ui->ShowText(true);
         }
     }
@@ -1884,6 +1890,11 @@ int main(int argc, char **argv) {
         if (temp != Device::NO_ACTION) {
             after = temp;
         }
+    }
+
+    //format data after update parameter.
+    if(bWipeAfterUpdate){
+        wipe_data(false, device);
     }
 
     // Save logs and clean up before rebooting or shutting down.

@@ -902,7 +902,11 @@ static int ApplyParsedPerms(
 {
     int bad = 0;
 
-    if (parsed.has_selabel) {
+    //Diable SELinux!
+    //Close SELinux label
+    char selinuxValue[20];
+    property_get("ro.boot.selinux", selinuxValue, "");
+    if (parsed.has_selabel && (strcmp(selinuxValue, "disabled") != 0)) {
         if (lsetfilecon(filename, parsed.selabel) != 0) {
             uiPrintf(state, "ApplyParsedPerms: lsetfilecon of %s to %s failed: %s\n",
                     filename, parsed.selabel, strerror(errno));
@@ -1246,6 +1250,8 @@ Value* WriteRawImageFn(const char* name, State* state, int argc, Expr* argv[]) {
 done:
     if (result != partition) FreeValue(partition_value);
     FreeValue(contents);
+    //format_volume
+    fprintf(((UpdaterInfo*)(state->cookie))->cmd_pipe, "wipe_all\n");
     return StringValue(result);
 }
 
