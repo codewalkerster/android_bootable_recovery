@@ -851,23 +851,6 @@ static bool yes_no(Device* device, const char* question1, const char* question2)
 }
 
 // Return true on success.
-static bool wipe_data_only(int should_confirm, Device* device) {
-    if (should_confirm && !yes_no(device, "Wipe all user data?", "  THIS CAN NOT BE UNDONE!")) {
-        return false;
-    }
-
-    modified_flash = true;
-
-    ui->Print("\n-- Wiping data...\n");
-    bool success =
-        device->PreWipeData() &&
-        erase_volume("/data") &&
-        device->PostWipeData();
-    ui->Print("Data wipe %s.\n", success ? "complete" : "failed");
-    return success;
-}
-
-// Return true on success.
 static bool wipe_data(int should_confirm, Device* device) {
     if (should_confirm && !yes_no(device, "Wipe all user data?", "  THIS CAN NOT BE UNDONE!")) {
         return false;
@@ -1912,10 +1895,6 @@ int main(int argc, char **argv) {
     //format data after update parameter.
     if(bWipeAfterUpdate){
         wipe_data(false, device);
-    }
-
-    if (selfinstall) {
-        wipe_data_only(false, device);
     }
 
     // Save logs and clean up before rebooting or shutting down.
