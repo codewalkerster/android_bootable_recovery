@@ -1413,7 +1413,7 @@ Value* RunProgramFn(const char* name, State* state, int argc, Expr* argv[]) {
 
     printf("about to run program [%s] with %d args\n", args2[0], argc);
 
-    pid_t child = fork();
+    pid_t child = vfork();
     if (child == 0) {
         execv(args2[0], args2);
         printf("run_program: execv failed: %s\n", strerror(errno));
