@@ -58,12 +58,14 @@
 #include "updater.h"
 #include "install.h"
 #include "tune2fs.h"
-#include "sparse.h"
+#include <sparse/sparse.h>
 
 #ifdef USE_EXT4
 #include "make_ext4fs.h"
 #include "wipe.h"
 #endif
+
+bool ExtractSparseToFile(State *state, char *image_start_ptr, char *name);
 
 // Send over the buffer to recovery though the command pipe.
 static void uiPrint(State* state, const std::string& buffer) {
@@ -636,7 +638,7 @@ Value* PackageExtractFileFn(const char* name, State* state,
 
       done1:
         free(zip_path);
-        if (!success) {
+        if (success) {
             free(v->data);
             v->data = NULL;
             v->size = -1;
@@ -707,7 +709,7 @@ Value* WriteSparseImageFn(const char* name, State* state,
 
 done1:
         free(zip_path);
-        if (!success) {
+        if (success) {
             free(v->data);
             v->data = NULL;
             v->size = -1;

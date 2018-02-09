@@ -21,7 +21,7 @@
 
 #include "edify/expr.h"
 
-#include "sparse.h"
+#include <sparse/sparse.h>
 
 #ifdef DEBUG
 #define FBTDBG(fmt, args...)\
@@ -216,7 +216,7 @@ static int do_unsparse(int fd, char *source,
     return 0;
 }
 
-bool  ExtractSparseToFile(State *state, char *image_start_ptr, char *name)
+bool ExtractSparseToFile(State *state, char *image_start_ptr, char *name)
 {
     /* Check if we have sparse compressed image */
     if (((sparse_header_t *)image_start_ptr)->magic
@@ -228,7 +228,7 @@ bool  ExtractSparseToFile(State *state, char *image_start_ptr, char *name)
         if (!do_unsparse(fd, image_start_ptr, 0)) {
             printf("Writing sparsed: '%s' DONE!\n", name);
             close(fd);
-            return 1;
+            return true;
         }
 
         close(fd);
@@ -236,5 +236,5 @@ bool  ExtractSparseToFile(State *state, char *image_start_ptr, char *name)
         printf("Writing sparsed '%s' FAILED!\n", name);
     }
 
-    return 0;
+    return false;
 }
