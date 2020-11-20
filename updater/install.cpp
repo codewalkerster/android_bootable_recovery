@@ -65,6 +65,7 @@
 #include "otautil/ZipUtil.h"
 #include "updater/updater.h"
 #include "sparse.h"
+#include "oem.h"
 
 // Send over the buffer to recovery though the command pipe.
 static void uiPrint(State* state, const std::string& buffer) {
@@ -723,6 +724,16 @@ Value* WriteSparseImageFn(const char* name, State* state,
   return StringValue("");
 }
 
+Value* OemFdiskFn(const char* name, State* state,
+        const std::vector<std::unique_ptr<Expr>>& argv) {
+    if (argv.size() >2) {
+        return ErrorAbort(state, kArgsParsingFailure, "%s() expects no args, got %zu", name,
+                argv.size());
+    }
+    bool success = fdisk();
+    return StringValue(success ? "t" : "");
+}
+
 Value* GetPropFn(const char* name, State* state, const std::vector<std::unique_ptr<Expr>>& argv) {
   if (argv.size() != 1) {
     return ErrorAbort(state, kArgsParsingFailure, "%s() expects 1 arg, got %zu", name, argv.size());
@@ -1118,6 +1129,8 @@ void RegisterInstallFunctions() {
   RegisterFunction("file_getprop", FileGetPropFn);
 
   RegisterFunction("write_sparse_image", WriteSparseImageFn);
+
+  RegisterFunction("oem_fdisk", OemFdiskFn);
 
   RegisterFunction("apply_patch", ApplyPatchFn);
   RegisterFunction("apply_patch_check", ApplyPatchCheckFn);
