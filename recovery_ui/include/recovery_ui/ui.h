@@ -29,6 +29,15 @@
 
 static constexpr const char* DEFAULT_LOCALE = "en-US";
 
+class Point {
+  public:
+    int x_ = 0;
+    int y_ = 0;
+    Point(int x, int y):
+    x_(x),y_(y){};
+    bool Valid();
+};
+
 // Abstract class for controlling the user interface during recovery.
 class RecoveryUI {
  public:
@@ -228,6 +237,7 @@ class RecoveryUI {
   int touch_start_X_;
   int touch_start_Y_;
   bool touch_finger_down_;
+  std::vector<Point> points_;
 
   bool fastbootd_logo_enabled_;
   bool RkFactory_Start_;

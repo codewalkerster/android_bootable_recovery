@@ -52,6 +52,11 @@ constexpr const char* MAX_BRIGHTNESS_FILE_SDM =
 constexpr int kDefaultTouchLowThreshold = 50;
 constexpr int kDefaultTouchHighThreshold = 90;
 
+bool Point::Valid() {
+  return (x_ > 0 && x_ < gr_fb_width() &&
+          y_ > 0 && y_ < gr_fb_height());
+}
+
 RecoveryUI::RecoveryUI()
     : brightness_normal_(50),
       brightness_dimmed_(25),
@@ -283,6 +288,7 @@ int RecoveryUI::OnInputEvent(int fd, uint32_t epevents) {
   }
 
   if (touch_screen_allowed_ && ev.type == EV_ABS) {
+    static int event_count = 0;
     if (ev.code == ABS_MT_SLOT) {
       touch_slot_ = ev.value;
     } else {
@@ -290,15 +296,16 @@ int RecoveryUI::OnInputEvent(int fd, uint32_t epevents) {
     }
     // Ignore other fingers.
     if (touch_slot_ > 0) return 0;
-
     switch (ev.code) {
       case ABS_MT_POSITION_X:
         touch_X_ = ev.value;
+        event_count++;
         touch_finger_down_ = true;
         break;
 
       case ABS_MT_POSITION_Y:
         touch_Y_ = ev.value;
+        event_count++;
         touch_finger_down_ = true;
         break;
 
@@ -306,6 +313,17 @@ int RecoveryUI::OnInputEvent(int fd, uint32_t epevents) {
         // Protocol B: -1 marks lifting the contact.
         if (ev.value < 0) touch_finger_down_ = false;
         break;
+    }
+    int point_size = points_.size();
+    bool same_point = false;
+    if (point_size > 1) {
+      same_point = points_[point_size - 1].x_ == touch_X_ && points_[point_size - 1].y_ == touch_Y_;
+    }
+    Point cur_point(touch_X_, touch_Y_);
+    // Mark two events as a point.
+    if (!same_point && cur_point.Valid() && (event_count % 2 == 0)) {
+        points_.push_back(cur_point);
+        event_count = 0;
     }
     return 0;
   }

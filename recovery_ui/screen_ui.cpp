@@ -47,16 +47,18 @@
 #include "recovery_ui/device.h"
 #include "recovery_ui/ui.h"
 
+#undef MAX
+#define MAX(a,b)    ((a) > (b) ? (a) : (b))
+#undef MIN
+#define MIN(a,b)    ((a) < (b) ? (a) : (b))
+#undef ABS
+#define ABS(a)      ((a) >= 0 ? (a) : (-(a)))
+
 // Return the current time as a double (including fractions of a second).
 static double now() {
   struct timeval tv;
   gettimeofday(&tv, nullptr);
   return tv.tv_sec + tv.tv_usec / 1000000.0;
-}
-
-bool Point::Valid() {
-  return (x_ > 0 && x_ < gr_fb_width() &&
-          y_ > 0 && y_ < gr_fb_height());
 }
 
 Menu::Menu(size_t initial_selection, const DrawInterface& draw_func)
@@ -674,6 +676,40 @@ int ScreenRecoveryUI::DrawWrappedTextLines(int x, int y,
   return offset;
 }
 
+int drawPoint(int x, int y) {
+    if (x < 0 || y < 0) {
+        return -1;
+    }
+    gr_fill(x, y, x + 2 , y + 2);
+    return 0;
+}
+
+int drawLine(int x1, int y1, int x2, int y2) {
+    int x,y;
+    if (x1 == x2) {
+        x = x1;
+        for (y = MIN(y1, y2); y <= MAX(y1, y2); y++) {
+            drawPoint(x, y);
+        }
+    } else if (y1 == y2) {
+        y = y1;
+        for (x = MIN(x1, x2); x <= MAX(x1, x2); x++) {
+            drawPoint(x, y);
+        }
+    } else if (ABS(x1-x2) > ABS(y1-y2)) {
+        for (x = MIN(x1, x2); x <= MAX(x1, x2); x++) {
+            y = ((y2 - y1) * (x - x1)) / (x2 - x1) + y1;
+            drawPoint(x, y);
+        }
+    } else {
+        for (y = MIN(y1, y2); y <= MAX(y1, y2); y++) {
+            x = ((x2 - x1) * (y - y1)) / (y2 - y1) + x1;
+            drawPoint(x, y);
+        }
+    }
+    return 0;
+}
+
 void ScreenRecoveryUI::SetTitle(const std::vector<std::string>& lines) {
   title_lines_ = lines;
 }
@@ -724,21 +760,6 @@ void ScreenRecoveryUI::draw_menu_and_text_buffer_locked(
     y += height;
   }
 
-  // Draw all of the Point.
-  if (!swipe_screen_allowed_) {
-    Point cur_point(touch_X_, touch_Y_);
-    if (touch_finger_down_ && cur_point.Valid()) {
-      points_.push_back(cur_point);
-    } else {
-      points_.clear();
-    }
-    if (points_.size() > 0) {
-      SetColor(UIElement::HEADER);
-      for (size_t i = 0; i < points_.size(); i++) {
-        DrawFill(points_[i].x_, points_[i].y_, points_[i].x_ + 3, points_[i].y_ + 3);
-      }
-    }
-  }
 
   if (menu_) {
     int x = margin_width_ + kMenuIndent;
@@ -780,6 +801,19 @@ void ScreenRecoveryUI::draw_menu_and_text_buffer_locked(
     DrawHighlightBar(ScreenWidth()/3, y, ScreenWidth()/3, ScreenHeight()/5);
     gr_color(0, 0, 255, 255);
     DrawHighlightBar(2*ScreenWidth()/3, y, ScreenWidth()/3, ScreenHeight()/5);
+  }
+  // Draw all of the Point.
+  if (!swipe_screen_allowed_) {
+    if (!touch_finger_down_) {
+      points_.clear();
+    }
+    if (points_.size() > 0) {
+      gr_color(255, 100, 100, 255);
+      // Skip 3 points due to drm cached buffer.
+      for (size_t i = 3; i < points_.size(); i++) {
+        drawLine(points_[i - 1].x_, points_[i - 1].y_, points_[i].x_, points_[i].y_);
+      }
+    }
   }
   // Display from the bottom up, until we hit the top of the screen, the bottom of the menu, or
   // we've displayed the entire text buffer.
