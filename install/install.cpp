@@ -517,6 +517,8 @@ static InstallResult TryUpdateBinary(Package* package, bool* wipe_cache,
   return INSTALL_SUCCESS;
 }
 
+static int try_install_rkloader_from_package(Package* package,RecoveryUI* ui);
+
 static InstallResult VerifyAndInstallPackage(Package* package, bool* wipe_cache,
                                              std::vector<std::string>* log_buffer, int retry_count,
                                              int* max_temperature, RecoveryUI* ui) {
@@ -538,6 +540,7 @@ static InstallResult VerifyAndInstallPackage(Package* package, bool* wipe_cache,
   }
   ui->SetEnableReboot(false);
   auto result = TryUpdateBinary(package, wipe_cache, log_buffer, retry_count, max_temperature, ui);
+  result = (InstallResult)try_install_rkloader_from_package(package, ui);
   ui->SetEnableReboot(true);
   ui->Print("\n");
 
@@ -729,7 +732,7 @@ static int rkloader_bin(ZipArchiveHandle zip,const std::string& binary_path) {
   static constexpr const char* BINARY_NAME = "RKLoader.bin";
   ZipEntry binary_entry;
   if (FindEntry(zip, BINARY_NAME, &binary_entry) != 0) {
-    LOG(ERROR) << "Failed to find update binary " << BINARY_NAME;
+    LOG(ERROR) << "Don't find RKLoader.bin, it's ok " << BINARY_NAME;
     return INSTALL_CORRUPT;
   }
 
@@ -803,6 +806,39 @@ int install_rkloader_package(Package* package, const std::string_view package_id
     result = INSTALL_ERROR;
   } else {
     result = really_install_rkloader_package(package, ui);
+  }
+
+  return result;
+}
+
+static int try_install_rkloader_from_package(Package* package,RecoveryUI* ui) {
+  printf("try_install_rkloader_from_package\n");
+  // Try to open the package.
+  ZipArchiveHandle zip = package->GetZipArchiveHandle();
+  if (!zip) {
+	LOG(ERROR) << "failed to GetZipArchiveHandle kZipOpenFailure ";
+    return INSTALL_CORRUPT;
+  }
+
+  int result = rkloader_bin(zip, "/tmp/RKLoader.bin");
+  if (INSTALL_SUCCESS == result) {
+    void *pCallback = NULL;
+    void *pProgressCallback = NULL;
+    char *szBootDev = NULL;
+    int bRet = 0;
+
+	  // Verify and install the contents of the package.
+    ui->Print("Installing rkloader...\n");
+	printf("Installing rkloader...\n");
+    bRet= do_rk_firmware_upgrade((char *)"/tmp/RKLoader.bin", pCallback, pProgressCallback, szBootDev);
+    if(bRet){
+      result = INSTALL_SUCCESS;
+    } else {
+      result = INSTALL_ERROR;
+    }
+  }else{
+    result = INSTALL_SUCCESS;
+    printf("Don't include rkloader, skip...\n");
   }
 
   return result;
