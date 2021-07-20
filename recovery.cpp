@@ -1325,7 +1325,7 @@ Device::BuiltinAction start_recovery(Device* device, const std::vector<std::stri
     }else{
       printf("resize /data \n");
       ui->Print("resize /data \n");
-      if (ResizeData() != 0){
+      if (ResizeData(device) != 0){
         status = INSTALL_ERROR;
         printf("ResizeData failed! \n");
       }
