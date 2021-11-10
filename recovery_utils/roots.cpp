@@ -432,6 +432,48 @@ int setup_install_mounts() {
   return 0;
 }
 
+// Create Userdata partition. It should be called before mounting metadata partition.
+int create_userdata_volume(int bootDevice) {
+  std::string media;
+  if (bootDevice == 0) { // eMMC
+    media = "/dev/block/mmcblk0";
+  } else if (bootDevice == 1) { // SD
+    media = "/dev/block/mmcblk1";
+  }
+  std::vector<std::string> sgdisk_header_move = {
+    "/system/bin/sgdisk",
+    "--move-second-header",
+    media
+  };
+  if(exec_cmd(sgdisk_header_move)) {
+    PLOG(ERROR) << "create_userdata: Failed to move second header";
+    return -1;
+  }
+
+  std::vector<std::string> sgdisk_create = {
+    "/system/bin/sgdisk",
+    "--largest-new=13",
+    "--change-name=13:userdata",
+    media
+  };
+  int result = exec_cmd(sgdisk_create);
+
+  if (result == 0) {
+    std::vector<std::string> partprobe = {
+      "/system/bin/toybox",
+      "partprobe",
+      media
+    };
+
+    result = exec_cmd(partprobe);
+  }
+  if (result != 0) {
+      PLOG(ERROR) << "create_userdata: Failed to create userdata";
+      return -1;
+  }
+  return 0;
+}
+
 bool HasCache() {
   CHECK(!fstab.empty());
   static bool has_cache = volume_for_mount_point(CACHE_ROOT) != nullptr;

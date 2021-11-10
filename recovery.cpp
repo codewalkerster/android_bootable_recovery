@@ -49,6 +49,7 @@
 #include "install/fuse_install.h"
 #include "install/install.h"
 #include "install/package.h"
+#include "install/partition.h"
 #include "install/snapshot_utils.h"
 #include "install/wipe_data.h"
 #include "install/wipe_device.h"
@@ -1166,6 +1167,7 @@ Device::BuiltinAction start_recovery(Device* device, const std::vector<std::stri
   ui->ResetKeyInterruptStatus();
   device->StartRecovery();
 
+  CreateUserData(device, is_boot_from_sd());
   SureMetadataMount();
 
   printf("Command:");
