@@ -55,7 +55,7 @@ int format_volume(const std::string& volume, const std::string& directory);
 int setup_install_mounts();
 
 // Create userdata volume at the end of partition as largest. It should be called before mounting metadata partition.
-int create_userdata_volume(int bootDevice);
+int create_userdata_volume(const std::string& bootDevice);
 
 // Returns true if there is /cache in the volumes.
 bool HasCache();

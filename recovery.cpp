@@ -933,29 +933,12 @@ char* check_media_package(const char *path, SDBoot* prksdboot, RecoveryUI* ui){
     return NULL;
 }
 
-static int is_boot_from_sd(){
-    char param[1024];
-    int fd, ret;
-    char *s=NULL;
-	int is_sd_boot = 0;
+static std::string  getBootDevice() {
+    std::string storageMedia =
+        android::base::GetProperty("ro.boot.storagemedia", "emmc");
 
-    memset(param,0,1024);
-    fd= open("/proc/cmdline", O_RDONLY);
-    ret = read(fd, (char*)param, 1024);
-
-    s = strstr(param,"storagemedia=sd");
-    if(s != NULL){
-        is_sd_boot = 1;
-    }else{
-        is_sd_boot = 0;
-    }
-
-    close(fd);
-
-    printf("is_boot_from_sd is_sd_boot=%d \n", is_sd_boot);
-    return is_sd_boot;
+    return storageMedia;
 }
-
 
 static int try_do_sdcard_boot(int* stat, SDBoot* prksdboot, RecoveryUI* ui)
 {
@@ -972,7 +955,7 @@ static int try_do_sdcard_boot(int* stat, SDBoot* prksdboot, RecoveryUI* ui)
     }
     is_sd_mounted = 0;
     is_sdupdate = 0;
-    if(is_boot_from_sd())
+    if (strncmp(getBootDevice().c_str(), "sd", strlen("sd")) == 0)
     {
         /*try mount sdcard*/
         for(i = 0; i < 3; i++) {
@@ -1167,7 +1150,7 @@ Device::BuiltinAction start_recovery(Device* device, const std::vector<std::stri
   ui->ResetKeyInterruptStatus();
   device->StartRecovery();
 
-  CreateUserData(device, is_boot_from_sd());
+  CreateUserData(device, getBootDevice());
   SureMetadataMount();
 
   printf("Command:");

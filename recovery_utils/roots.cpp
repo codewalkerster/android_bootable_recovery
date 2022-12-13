@@ -433,12 +433,15 @@ int setup_install_mounts() {
 }
 
 // Create Userdata partition. It should be called before mounting metadata partition.
-int create_userdata_volume(int bootDevice) {
+int create_userdata_volume(const std::string& bootDevice) {
   std::string media;
-  if (bootDevice == 0) { // eMMC
+  const char* mediaName = bootDevice.c_str();
+  if (strncmp(mediaName, "emmc", strlen("emmc")) == 0) {
     media = "/dev/block/mmcblk0";
-  } else if (bootDevice == 1) { // SD
+  } else if (strncmp(mediaName, "sd", strlen("sd")) == 0) {
     media = "/dev/block/mmcblk1";
+  } else { //NVME
+    media = "/dev/block/nvme0n1";
   }
   std::vector<std::string> sgdisk_header_move = {
     "/system/bin/sgdisk",

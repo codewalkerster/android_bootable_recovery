@@ -2,4 +2,4 @@
 
 #include "recovery_ui/device.h"
 
-void CreateUserData(Device *device, int isSdBoot);
+void CreateUserData(Device *device, const std::string& bootDevice);
