@@ -454,6 +454,7 @@ int create_userdata_volume(int bootDevice) {
     "/system/bin/sgdisk",
     "--largest-new=13",
     "--change-name=13:userdata",
+    "--typecode=13:a03a",
     media
   };
   int result = exec_cmd(sgdisk_create);
