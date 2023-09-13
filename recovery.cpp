@@ -1150,6 +1150,10 @@ Device::BuiltinAction start_recovery(Device* device, const std::vector<std::stri
   ui->ResetKeyInterruptStatus();
   device->StartRecovery();
 
+  if (HasCache()) {
+    ensure_path_unmounted(CACHE_ROOT);
+  }
+
   CreateUserData(device, getBootDevice());
   SureMetadataMount();
 
